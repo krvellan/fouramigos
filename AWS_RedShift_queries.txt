@@ -1,0 +1,147 @@
+--Hourly Average pm25
+
+CREATE TABLE pm25_avg 
+( "time" varchar, avg_pm25 int, constraint pm25_avgpk PRIMARY KEY ("time")
+  );
+
+INSERT INTO pm25_avg
+SELECT t,avg_pm25
+FROM (SELECT pm25."time" AS t, avg(pm25.val) AS "avg_pm25"
+	 FROM (SELECT "time","value.int" AS val
+  	  	   FROM realtime_aq_10042021
+      	   WHERE parameter = 'pm25') AS "pm25"
+	 GROUP BY "time");
+
+Select * FROM pm25_avg;
+
+
+
+--Hourly Average pm10 
+
+CREATE TABLE pm10_avg 
+( hour varchar, avg_pm10 int
+  );
+
+INSERT INTO pm10_avg
+SELECT t,avg_pm10
+FROM (SELECT pm10."time" AS t, avg(pm10.val) AS "avg_pm10"
+	 FROM (SELECT "time","value.int" AS val
+  	  	   FROM realtime_aq_10042021
+      	   WHERE parameter = 'pm10') AS "pm10"
+	 GROUP BY "time");
+   
+Select * FROM pm10_avg;
+
+
+
+--Hourly Average o3
+
+CREATE TABLE o3_avg 
+( "time" varchar, avg_o3 double precision
+  );
+
+INSERT INTO o3_avg
+SELECT t,avg_o3
+FROM (SELECT o3."time" AS t, avg(o3.val) AS "avg_o3"
+	 FROM (SELECT "time","value.double" AS val
+  	  	   FROM realtime_aq_10042021
+      	   WHERE parameter = 'o3') AS "o3"
+	 GROUP BY "time");
+   
+Select * FROM o3_avg;
+
+
+--Hourly Average weather data
+
+CREATE TABLE weather_hour
+( "time" varchar, 
+  avg_temp double precision NOT NULL, 
+  avg_precip double precision NOT NULL, 
+    PRIMARY KEY ("time")
+  );
+  
+  
+INSERT INTO weather_hour
+SELECT "time" as hour,avg_temp, avg_precip
+FROM (SELECT "time", avg("t_calc") as avg_temp, avg("p_calc") as avg_precip
+  	  FROM weather
+      where lst_date=20211004
+      GROUP BY "time");
+
+SELect * from weather_hour;
+
+
+--Joining Hourly avg pm10 and pm25
+
+CREATE TABLE pm 
+("time" varchar, 
+  pm10 int NOT NULL, 
+  pm25 int NOT NULL, 
+  PRIMARY KEY ("time")
+  );
+  
+
+INSERT INTO pm
+SELECT "time", pm10, pm25
+From(SELECT m."time", p.avg_pm10 as pm10, m.avg_pm25 as pm25
+	 FROM pm10_avg p  join pm25_avg m  
+	 ON p."hour"= m."time");
+
+Select * FROM pm;
+
+
+
+--Combining hourly openaq parameters
+
+CREATE TABLE parameter_hourly 
+("time" varchar, 
+  pm10 int NOT NULL, 
+  pm25 int NOT NULL, 
+  o3 double precision NOT NULL,
+  	PRIMARY KEY ("time")
+  );
+  
+  
+INSERT INTO parameter_hourly
+SELECT "time", pm10, pm25, o3
+From(SELECT pm."time", pm.pm10 as pm10, pm.pm25 as pm25, o3_avg.avg_o3 as o3
+	 FROM pm 
+  	 JOIN o3_avg  
+	 ON pm."time" = o3_avg."time"
+	 Group by pm."time", pm.pm10, pm.pm25, o3_avg.avg_o3
+  	 );
+
+
+Select* From parameter_hourly;
+
+
+--Joining  hourly openaq parameters with weather
+
+CREATE TABLE hourly_data 
+("time" varchar, 
+  pm10 int NOT NULL, 
+  pm25 int NOT NULL, 
+  o3 double precision NOT NULL,
+  temperature double precision NOT NULL, 
+  precipitation double precision NOT NULL, 
+  PRIMARY KEY ("time")
+  );
+  
+INSERT INTO hourly_data
+SELECT "time", pm10, pm25, o3, temperature, precipitation
+From(SELECT p."time" as time, p.pm10 as pm10, p.pm25 as pm25, p.o3 as o3, w.avg_temp as temperature, w.avg_precip as precipitation
+	 FROM parameter_hourly p 
+     JOIN weather_hour w
+	 ON p."time" = w."time"
+	 Group by p."time", p.pm10, p.pm25, p.o3, w.avg_temp, w.avg_precip
+  );
+  
+Select * FROM hourly_data;
+
+
+
+
+
+
+
+
