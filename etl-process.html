@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vokse Sites</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div>
+        <div class="topnav">
+            <a href="index.html">Home</a>
+            <a class="active" href="etl-process.html">ETL-Process</a>
+            <a href="qr.html">Query/Results</a>
+            <a href="Visualizations.html">Visualizations</a>
+        </div>
+    </div>
+    <div class="section12">
+        <h1>ETL-Process</h1>
+        <img src="etl.png" width="468.75" height="215.25" class="imgcenter">
+        <p1> <br><br>&nbsp;&nbsp;&nbsp;&nbsp; What is the "ETL-Process"? The "ETL-Process" is the process in which data is
+            extracted, transformed, and loaded. Extraction is the process in which data is taken from multiple
+            different places and put in one place. In our project we took the data from two sources OpenAQ, and the
+            NOAA USRCRN weather data. We scrapped the data and loaded the data to S3 buckets. From here we transformed
+            the data by extracting data that was only relevant to our project. We went ahead and extracted the data
+            for the Santa Barbara, CA area and pulled out columns that we thought would be helpfull for our project.
+            We then took the transformed data and loaded it using AWS Glue and redshift (which was used to create the
+            tables and query the data). Using the datasets we have also created tables to show the parameters of the
+            tables</p1>
+        <img src="ssetl1.png" width="468.75" height="215.25" class="imgcenter">
+        <br><br>
+        <p>The process of the ETL pipline is outlined above for both the datasets we used.</p>
+        <br><br>
+        <p1>The 5 step Glue job steps that we used are as follows: load, map, filter, flatten, write. <br>
+            In the extracting part of our project we loaded all the files from OpenAQ public S3 bucket source directory.
+            For the transform part, we mapped and dropped data accordingly and cleaned the data prepping it to be
+            used in out load process. From here to load the data we wrote scripts which would target the correct data
+            to be analyzed.
+        </p1>
+        <img src="ssetl2.png" width="468.75" height="215.25" class="imgcenter">
+        <p1>The data was joined using the columns which could be connected which was time. Both datasets had an hourly
+            time stamp which was used. To keep the tables compatible we had to create new columns. This process prepared
+            us for the analysis part of comparing the AQ/temperature/precipitation over time.</p1>
+        <img src="ssetl3.png" width="468.75" height="215.25" class="imgcenter">
+    </div>
+</body>
+</html>
