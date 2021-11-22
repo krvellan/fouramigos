@@ -1,0 +1,20 @@
+CREATE TABLE parameter_hourly 
+("time" varchar, 
+  pm10 int NOT NULL, 
+  pm25 int NOT NULL, 
+  o3 double precision NOT NULL,
+  	PRIMARY KEY ("time")
+  );
+  
+  
+INSERT INTO parameter_hourly
+SELECT "time", pm10, pm25, o3
+From(SELECT pm."time", pm.pm10 as pm10, pm.pm25 as pm25, o3_avg.avg_o3 as o3
+	 FROM pm 
+  	 JOIN o3_avg  
+	 ON pm."time" = o3_avg."time"
+	 Group by pm."time", pm.pm10, pm.pm25, o3_avg.avg_o3
+  	 );
+
+
+Select* From parameter_hourly;
